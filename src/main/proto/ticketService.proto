@@ -1,0 +1,59 @@
+syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+
+option java_multiple_files = true;
+option java_package = "klaus.demo";
+option java_outer_classname = "TicketProto";
+
+package ticket;
+
+// Interface exported by the server.
+service TicketService {
+  rpc GetAggregatedCategories(DateRange) returns (stream CategoryResultResponse);
+  rpc GetScoresByTickets(DateRange) returns (stream TicketValuesResponse);
+  rpc GetOverallQualityScore(DateRange) returns (QualityResponse);
+  rpc GetPeriodOverPeriodScoreChange(DoubleDateRange) returns (PeriodChangeResponse);
+}
+
+message DateRange {
+  google.protobuf.Timestamp period_from = 1;
+  google.protobuf.Timestamp period_to = 2;
+}
+
+//--------------------- GetAggregatedCategories ---------------------
+message CategoryResultResponse {
+  string category_name = 1;
+  int32 ratings_count = 2;
+  repeated DateScore date_scores = 3;
+  int32 total_score = 4;
+}
+
+message DateScore {
+  google.protobuf.Timestamp date = 1;
+  int32 score = 2;
+}
+
+//--------------------- GetScoresByTickets ---------------------
+message TicketValuesResponse {
+  int64 ticket_id = 1;
+  repeated CategoryScoreValue category_scores = 2;
+}
+
+message CategoryScoreValue {
+  string category_name = 1;
+  int32 score = 2;
+}
+
+//--------------------- GetOverallQualityScore ---------------------
+message QualityResponse {
+  int32 score = 1;
+}
+
+//--------------------- GetPeriodOverPeriodScoreChange ---------------------
+message PeriodChangeResponse {
+  int32 period_change_score = 1;
+}
+message DoubleDateRange {
+  DateRange selected_period = 1;
+  DateRange previous_period = 2;
+}

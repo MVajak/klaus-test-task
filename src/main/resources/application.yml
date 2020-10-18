@@ -1,0 +1,4 @@
+spring:
+  datasource:
+    driver-class-name: org.sqlite.JDBC
+    url: jdbc:sqlite:/home/mihkel/Documents/Klaus_rpc_example/klaus_test/database.db
