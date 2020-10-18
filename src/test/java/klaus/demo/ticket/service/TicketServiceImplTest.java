@@ -138,6 +138,31 @@ class TicketServiceImplTest {
     }
 
     @Test
+    void shouldNotReturnCategoryValuesWithSameDateWhenRequestedWeeklyAggregates() throws Exception {
+        LocalDateTime periodFrom = LocalDateTime.parse("2019-07-17T15:49:14");
+        LocalDateTime periodTo = LocalDateTime.parse("2019-08-18T15:49:14");
+        DateRange request = getDateRange(periodFrom, periodTo);
+        CategoryScore categoryScore1 = getCategoryScore(FIRST_CATEGORY, 10, "2019-07-17T01:05:16");
+        CategoryScore categoryScore2 = getCategoryScore(FIRST_CATEGORY, 20, "2019-07-19T00:26:10");
+        CategoryScore categoryScore3 = getCategoryScore(SECOND_CATEGORY, 30, "2019-08-13T15:49:14");
+        doReturn(List.of(categoryScore1, categoryScore2, categoryScore3)).when(ticketRepository).getCategoryScoresBetweenDates(periodFrom, periodTo);
+
+        StreamRecorder<CategoryResultResponse> responseObserver = StreamRecorder.create();
+        ticketService.getAggregatedCategories(request, responseObserver);
+        if (!responseObserver.awaitCompletion(5, TimeUnit.SECONDS)) {
+            fail("The call did not terminate in time");
+        }
+        assertNull(responseObserver.getError());
+        List<CategoryResultResponse> results = responseObserver.getValues();
+        assertEquals(2, results.size());
+        CategoryResultResponse firstResponse = results.stream().filter(response -> response.getCategoryName().equals(FIRST_CATEGORY)).findFirst().orElseThrow();
+
+        assertEquals(1, firstResponse.getDateScoresCount());
+        assertEquals(categoryScore1.getParsedDate().toLocalDate().atStartOfDay().with(DayOfWeek.MONDAY).toEpochSecond(ZoneOffset.UTC), firstResponse.getDateScoresList().get(0).getDate().getSeconds());
+        assertEquals(categoryScore2.getParsedDate().toLocalDate().atStartOfDay().with(DayOfWeek.MONDAY).toEpochSecond(ZoneOffset.UTC), firstResponse.getDateScoresList().get(0).getDate().getSeconds());
+    }
+
+    @Test
     void shouldReturnOverallQualityScore() throws Exception {
         LocalDateTime periodFrom = LocalDateTime.parse("2019-07-17T15:49:14");
         LocalDateTime periodTo = LocalDateTime.parse("2019-08-17T15:49:14");

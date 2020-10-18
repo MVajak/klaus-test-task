@@ -15,6 +15,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.WeekFields;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static java.time.temporal.ChronoUnit.MONTHS;
@@ -65,7 +66,7 @@ public class TicketServiceImpl extends TicketServiceGrpc.TicketServiceImplBase {
             WeekFields weekFields = WeekFields.of(LocalDate.MAX.getDayOfWeek(), 7);
             List<CategoryScore> categoryScoreBetweenDates = ticketRepository.getCategoryScoresBetweenDates(periodFrom, periodTo);
             categoryScoreBetweenDates.stream()
-                    .collect(groupingBy(CategoryScore::getCategoryName, groupingBy(categoryScore -> categoryScore.getParsedDate().get(weekFields.weekOfYear()))))
+                    .collect(groupingBy(CategoryScore::getCategoryName, groupingBy(categoryScore -> categoryScore.getParsedDate().toLocalDate().atStartOfDay().with(DayOfWeek.MONDAY).get(weekFields.weekOfYear()))))
                     .forEach((categoryName, weekdayListMap) -> {
                         Set<DateScore> dateScores = new HashSet<>();
                         Set<CategoryScore> categoryScores = new HashSet<>();
